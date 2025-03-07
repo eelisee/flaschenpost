@@ -9,13 +9,20 @@ def run_preprocessing():
     df_orders, df_driver_order_mapping, df_service_times, df_order_articles = load_data()
     df = merge_tables(df_orders, df_driver_order_mapping, df_service_times)
     df = pd.merge(df, df_order_articles[['web_order_id', 'article_id']], on='web_order_id', how='left')
+    print("size before remove outliers: ", df.shape)
     df = remove_outliers(df)
+    print("size after remove outliers: ", df.shape)
     df = add_article_total_weight(df, df_order_articles)
+    print("size after add article total weight: ", df.shape)
     df = one_hot_encoding(df)
+    print("size after one hot encoding: ", df.shape)
     # df = one_hot_encoding(df, ["warehouse_id", "driver_id"])
     df = handle_missing_values(df)
+    print("size after handle missing values: ", df.shape)
     df = service_time_start_ordinal_encoding(df)
+    print("size after service time start ordinal encoding: ", df.shape)
     df_train, df_test = train_test_split(df)
+    print("size after train test split: ", df_train.shape, df_test.shape)
     df_train, df_test = add_num_previous_orders__per_customer(df_train, df_test)
     df_train, df_test = add_customer_speed_ordinal(df_train, df_test)
     return df_train, df_test
@@ -54,6 +61,9 @@ def one_hot_encoding(df):
     missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if
                                f'article_id_{article_id}' not in df.columns}
     df = df.assign(**missing_article_columns)
+    # Fill missing article columns with 0 (only article_id_* cols)
+    df[df.columns[df.columns.str.contains("article_id")]] = df[df.columns[df.columns.str.contains("article_id")]].fillna(0)
+
 
     # Calculate crate_count by summing the number of unique box_ids + the number of rows that have box_id NaN per web_order_id
     if 'box_id' in df.columns:
@@ -69,6 +79,11 @@ def one_hot_encoding(df):
     missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if
                              f'crate_count_{crate_count}' not in df.columns}
     df = df.assign(**missing_crate_columns)
+
+    # Print number of null values per column, nicely formatted
+    print("Number of null values per column:")
+    print(df.isnull().sum())
+
 
     return df
 
