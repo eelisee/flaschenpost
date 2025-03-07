@@ -9,6 +9,7 @@ def run_preprocessing():
     df_orders, df_driver_order_mapping, df_service_times, df_order_articles = load_data()
     df = merge_tables(df_orders, df_driver_order_mapping, df_service_times)
     df = pd.merge(df, df_order_articles[['web_order_id', 'article_id']], on='web_order_id', how='left')
+    df = remove_outliers(df)
     df = add_article_total_weight(df, df_order_articles)
     df = one_hot_encoding(df)
     # df = one_hot_encoding(df, ["warehouse_id", "driver_id"])
@@ -43,12 +44,15 @@ def add_article_total_weight(df, df_order_articles):
 
 def one_hot_encoding(df):
     article_ids_to_encode = [15043, 20619, 18544, 21243]
-    crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49, 28, 30, 29, 27]
+    crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49,
+                              28, 30, 29, 27]
     # One hot encode article_id
-    article_id_dummies = df.groupby('web_order_id')['article_id'].apply(lambda x: pd.Series({f'article_id_{article_id}': 1 for article_id in article_ids_to_encode if article_id in x.values}))
+    article_id_dummies = df.groupby('web_order_id')['article_id'].apply(lambda x: pd.Series(
+        {f'article_id_{article_id}': 1 for article_id in article_ids_to_encode if article_id in x.values}))
     article_id_dummies = article_id_dummies.unstack().fillna(0).reset_index()
     df = pd.merge(df, article_id_dummies, on='web_order_id', how='left')
-    missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if f'article_id_{article_id}' not in df.columns}
+    missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if
+                               f'article_id_{article_id}' not in df.columns}
     df = df.assign(**missing_article_columns)
 
     # Calculate crate_count by summing the number of unique box_ids + the number of rows that have box_id NaN per web_order_id
@@ -62,10 +66,12 @@ def one_hot_encoding(df):
     # One hot encode crate_count
     df['crate_count'] = df['crate_count'].astype(str)
     df = pd.get_dummies(df, columns=['crate_count'], prefix='crate_count', prefix_sep='_')
-    missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if f'crate_count_{crate_count}' not in df.columns}
+    missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if
+                             f'crate_count_{crate_count}' not in df.columns}
     df = df.assign(**missing_crate_columns)
 
     return df
+
 
 def handle_missing_values(df):
     df = df.dropna()
@@ -105,3 +111,9 @@ def add_customer_speed_ordinal(df_train, df_test):
     df_train["customer_speed"] = df_train["customer_id"].map(customer_avg_service_time["customer_speed"]).fillna(4)
     df_test["customer_speed"] = df_test["customer_id"].map(customer_avg_service_time["customer_speed"]).fillna(4)
     return df_train, df_test
+
+def remove_outliers(df):
+    # Remove outliers
+    df = df[df["service_time_in_minutes"] < 60]
+    df = df[df["floor"] < 50]
+    return df
