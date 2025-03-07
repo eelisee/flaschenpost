@@ -5,6 +5,7 @@ from sklearn.linear_model import SGDRegressor
 from sklearn.preprocessing import StandardScaler
 from GRANDE import GRANDE
 from _1_Preprocessing import run_preprocessing
+from sklearn.naive_bayes import GaussianNB
 
 target = "service_time_in_minutes"
 features = ["article_weight_in_g", "is_business", "is_pre_order", "has_elevator", "floor", "num_previous_orders_customer", "customer_speed", "service_time_start"]
@@ -76,14 +77,14 @@ def ridge_regression(params):
     return MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test
 
 param_jobs = {"alpha": [0.01, 0.1, 0.5, 1.0, 1.5, 2, 10],
-          "solver": ['sag', 'saga', 'lbfgs'],
-          "tol": [0.00001, 0.0001, 0.001, 0.01, 0.1, 1],
+          "solver": ['auto'],
+          "tol": [0.001, 0.01, 0.1, 1],
           "max_iter": None,
           "random_state": 42}
 
 # Loop through all combinations of hyperparameters
 min_mae = float("inf")
-min_mae_params = None
+min_mae_params = {}
 params = param_jobs.copy()
 for alpha in param_jobs["alpha"]:
     for solver in param_jobs["solver"]:
@@ -94,7 +95,7 @@ for alpha in param_jobs["alpha"]:
             MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test =  ridge_regression(params)
             print(f"alpha={alpha}, solver={solver}, tol={tol}, MSE_train={MSE_train}, MAE_train={MAE_train}, R2_train={R2_train}, MSE_test={MSE_test}, MAE_test={MAE_test}, R2_test={R2_test}")
             min_mae = min_mae if min_mae < MAE_test else MAE_test
-            min_mae_params = params.copy() if min_mae < MAE_test else min_mae_params
+            min_mae_params = min_mae_params if min_mae < MAE_test else params.copy()
 
 # Best Hyperparameters
 print(f"Best Hyperparameters: {min_mae_params}")
@@ -131,9 +132,9 @@ def lasso_regression(params):
     return MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test
 
 param_jobs = {"alpha": [0.01, 0.1, 0.5, 1.0, 1.5, 2, 10],
-              "solver": ['sag', 'saga', 'lbfgs'],
-              "tol": [0.00001, 0.0001, 0.001, 0.01, 0.1, 1],
-              "max_iter": None,
+              "solver": ['auto'],
+              "tol": [0.0001, 0.001, 0.01, 0.1, 1],
+              "max_iter": 1000,
               "random_state": 42}
 
 # Loop through all combinations of hyperparameters
@@ -146,7 +147,7 @@ for alpha in param_jobs["alpha"]:
         print(
             f"alpha={alpha}, solver={solver}, tol={tol}, MSE_train={MSE_train}, MAE_train={MAE_train}, R2_train={R2_train}, MSE_test={MSE_test}, MAE_test={MAE_test}, R2_test={R2_test}")
         min_mae = min_mae if min_mae < MAE_test else MAE_test
-        min_mae_params = params.copy() if min_mae < MAE_test else min_mae_params
+        min_mae_params = min_mae_params if min_mae < MAE_test else params.copy()
 
 # Best Hyperparameters
 print(f"Best Hyperparameters: {min_mae_params}")
