@@ -9,6 +9,7 @@ def run_preprocessing():
     df_orders, df_driver_order_mapping, df_service_times, df_order_articles = load_data()
     df = merge_tables(df_orders, df_driver_order_mapping, df_service_times)
     df = add_article_total_weight(df, df_order_articles)
+    df = one_hot_encoding(df)
     # df = one_hot_encoding(df, ["warehouse_id", "driver_id"])
     df = handle_missing_values(df)
     df = service_time_start_ordinal_encoding(df)
@@ -39,8 +40,22 @@ def add_article_total_weight(df, df_order_articles):
     return df
 
 
-def one_hot_encoding(df, columns):
-    df = pd.get_dummies(df, columns=columns)
+def one_hot_encoding(df):
+    article_ids_to_encode = [15043, 20619, 18544, 21243]
+    crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49, 28, 30, 29, 27]
+    
+    # One hot encode article_id
+    df['article_id'] = df['article_id'].astype(str)
+    df = pd.get_dummies(df, columns=['article_id'], prefix='article_id', prefix_sep='_')
+    missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if f'article_id_{article_id}' not in df.columns}
+    df = df.assign(**missing_article_columns)
+    
+    # One hot encode crate_count
+    df['crate_count'] = df['crate_count'].astype(str)
+    df = pd.get_dummies(df, columns=['crate_count'], prefix='crate_count', prefix_sep='_')
+    missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if f'crate_count_{crate_count}' not in df.columns}
+    df = df.assign(**missing_crate_columns)
+    
     return df
 
 
