@@ -7,7 +7,7 @@ from GRANDE import GRANDE
 from _1_Preprocessing import run_preprocessing
 
 target = "service_time_in_minutes"
-features = ["article_weight_in_g", "is_business", "is_pre_order", "has_elevator", "floor", "num_previous_orders_customer", "customer_speed"]
+features = ["article_weight_in_g", "is_business", "is_pre_order", "has_elevator", "floor", "num_previous_orders_customer", "customer_speed", "service_time_start"]
 
 # Get Data
 df_train, df_test = run_preprocessing()
