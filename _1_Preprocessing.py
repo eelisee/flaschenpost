@@ -1,4 +1,8 @@
 import pandas as pd
+import os
+
+# BITTE DEN PFAD ANPASSEN (z.B. /data/)
+root_path_data = 'data/'
 
 
 def run_preprocessing():
@@ -15,10 +19,10 @@ def run_preprocessing():
 
 
 def load_data():
-    df_orders = pd.read_parquet('data/masked_orders.parquet')
-    df_driver_order_mapping = pd.read_parquet('data/masked_driver_order_mapping.parquet')
-    df_service_times = pd.read_parquet('data/masked_service_times.parquet')
-    df_order_articles = pd.read_parquet('data/masked_order_articles.parquet')
+    df_orders = pd.read_parquet(os.path.join(root_path_data, "masked_orders.parquet"))
+    df_driver_order_mapping = pd.read_parquet(os.path.join(root_path_data, 'masked_driver_order_mapping.parquet'))
+    df_service_times = pd.read_parquet(os.path.join(root_path_data, 'masked_service_times.parquet'))
+    df_order_articles = pd.read_parquet(os.path.join(root_path_data, 'masked_order_articles.parquet'))
     return df_orders, df_driver_order_mapping, df_service_times, df_order_articles
 
 
