@@ -45,8 +45,9 @@ def one_hot_encoding(df):
     article_ids_to_encode = [15043, 20619, 18544, 21243]
     crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49, 28, 30, 29, 27]
     # One hot encode article_id
-    df['article_id'] = df['article_id'].astype(str)
-    df = pd.get_dummies(df, columns=['article_id'], prefix='article_id', prefix_sep='_')
+    article_id_dummies = df.groupby('web_order_id')['article_id'].apply(lambda x: pd.Series({f'article_id_{article_id}': 1 for article_id in article_ids_to_encode if article_id in x.values}))
+    article_id_dummies = article_id_dummies.unstack().fillna(0).reset_index()
+    df = pd.merge(df, article_id_dummies, on='web_order_id', how='left')
     missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if f'article_id_{article_id}' not in df.columns}
     df = df.assign(**missing_article_columns)
     # One hot encode crate_count
