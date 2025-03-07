@@ -10,6 +10,7 @@ def run_preprocessing():
     df = merge_tables(df_orders, df_driver_order_mapping, df_service_times)
     df = add_article_total_weight(df, df_order_articles)
     df = one_hot_encoding(df)
+    df = add_crate_count(df)
     # df = one_hot_encoding(df, ["warehouse_id", "driver_id"])
     df = handle_missing_values(df)
     df = service_time_start_ordinal_encoding(df)
@@ -39,32 +40,28 @@ def add_article_total_weight(df, df_order_articles):
     df = pd.merge(df, article_total_weight, on="web_order_id", how='left')
     return df
 
+
+def one_hot_encoding(df):
+    article_ids_to_encode = [15043, 20619, 18544, 21243]
+    crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49, 28, 30, 29, 27]
+    # One hot encode article_id
+    df['article_id'] = df['article_id'].astype(str)
+    df = pd.get_dummies(df, columns=['article_id'], prefix='article_id', prefix_sep='_')
+    missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if f'article_id_{article_id}' not in df.columns}
+    df = df.assign(**missing_article_columns)
+    # One hot encode crate_count
+    df['crate_count'] = df['crate_count'].astype(str)
+    df = pd.get_dummies(df, columns=['crate_count'], prefix='crate_count', prefix_sep='_')
+    missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if f'crate_count_{crate_count}' not in df.columns}
+    df = df.assign(**missing_crate_columns)
+    return df
+
 def add_crate_count(df):
     # Calculate crate_count by summing the number of unique box_ids + the number of rows that have box_id NaN per web_order_id
     crate_count = df.groupby("web_order_id").apply(lambda x: x["box_id"].nunique() + x["box_id"].isna().sum())
     crate_count = crate_count.reset_index(name="crate_count")
     df = pd.merge(df, crate_count, on="web_order_id", how="left")
     return df
-
-
-def one_hot_encoding(df):
-    article_ids_to_encode = [15043, 20619, 18544, 21243]
-    crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49, 28, 30, 29, 27]
-    
-    # One hot encode article_id
-    df['article_id'] = df['article_id'].astype(str)
-    df = pd.get_dummies(df, columns=['article_id'], prefix='article_id', prefix_sep='_')
-    missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if f'article_id_{article_id}' not in df.columns}
-    df = df.assign(**missing_article_columns)
-    
-    # One hot encode crate_count
-    df['crate_count'] = df['crate_count'].astype(str)
-    df = pd.get_dummies(df, columns=['crate_count'], prefix='crate_count', prefix_sep='_')
-    missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if f'crate_count_{crate_count}' not in df.columns}
-    df = df.assign(**missing_crate_columns)
-    
-    return df
-
 
 def handle_missing_values(df):
     df = df.dropna()
