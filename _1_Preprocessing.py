@@ -65,13 +65,8 @@ def one_hot_encoding(df):
     df[df.columns[df.columns.str.contains("article_id")]] = df[df.columns[df.columns.str.contains("article_id")]].fillna(0)
 
 
-    # Calculate crate_count by summing the number of unique box_ids + the number of rows that have box_id NaN per web_order_id
-    if 'box_id' in df.columns:
-        crate_count = df.groupby("web_order_id").apply(lambda x: x["box_id"].nunique() + x["box_id"].isna().sum())
-        crate_count = crate_count.reset_index(name="crate_count")
-        df = pd.merge(df, crate_count, on="web_order_id", how="left")
-    else:
-        df['crate_count'] = 0
+    # Count NaNs in 'box id' per 'order id' and store in 'crate count'
+    df['crate_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.isna().sum())
 
     # One hot encode crate_count
     df['crate_count'] = df['crate_count'].astype(str)
