@@ -80,11 +80,6 @@ def one_hot_encoding(df):
                              f'crate_count_{crate_count}' not in df.columns}
     df = df.assign(**missing_crate_columns)
 
-    # Print number of null values per column, nicely formatted
-    print("Number of null values per column:")
-    print(df.isnull().sum())
-
-
     return df
 
 
