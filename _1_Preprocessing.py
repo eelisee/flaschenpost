@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # BITTE DEN PFAD ANPASSEN (z.B. /data/)
-root_path_data = 'data/'
+root_path_data = './data/'
 
 
 def run_preprocessing(save=False):
@@ -14,7 +14,8 @@ def run_preprocessing(save=False):
     print("size after remove outliers: ", df.shape)
     df = add_article_total_weight(df, df_order_articles)
     print("size after add article total weight: ", df.shape)
-    # df = one_hot_encoding(df)
+    df = one_hot_encoding(df, df_order_articles)
+    print("size after one hot encoding: ", df.shape)
     df = add_crate_counts(df, df_order_articles)
     print("size after add crate count: ", df.shape)
     # df = one_hot_encoding(df, ["warehouse_id", "driver_id"])
@@ -56,28 +57,46 @@ def merge_tables(df_orders, df_driver_order_mapping, df_service_times):
 
 
 def add_article_total_weight(df, df_order_articles):
-    article_total_weight = df_order_articles[["article_weight_in_g", "web_order_id", "box_id"]].groupby("web_order_id").sum()
+    article_total_weight = df_order_articles[["article_weight_in_g", "web_order_id"]].groupby("web_order_id").sum()
     df = pd.merge(df, article_total_weight, on="web_order_id", how='left')
     return df
 
 
-def one_hot_encoding(df):
+def one_hot_encoding(df, df_order_articles):
     article_ids_to_encode = [15043, 20619, 18544, 21243]
 
+    df_article_counts = pd.merge(df, df_order_articles[['web_order_id', 'article_id']], on='web_order_id', how='left', suffixes=('', '_y'))
+    df_article_counts.drop(df.filter(regex='_y$').columns, axis=1, inplace=True)
+
+    df_article_counts = df_article_counts[['web_order_id', 'article_id']]
+
+    # df_tmp = df_article_counts.copy()
+    article_counts = df_article_counts.groupby('web_order_id').agg({'article_id': 'nunique'})
+    article_counts = article_counts.fillna(0)
+
+
+    df = pd.merge(df, article_counts, on="web_order_id", how='left')
+
+    # One hot encode crate_count
+    for article_id in article_ids_to_encode:
+        df[f'article_id_{article_id}'] = (df['article_id'] == article_id).astype(int)
+    
+    return df
+
+
     # One hot encode article_id
-    article_id_dummies = df.groupby('web_order_id')['article_id'].apply(lambda x: pd.Series(
-        {f'article_id_{article_id}': 1 for article_id in article_ids_to_encode if article_id in x.values}))
-    article_id_dummies = article_id_dummies.unstack().fillna(0).reset_index()
-    df = pd.merge(df, article_id_dummies, on='web_order_id', how='left')
-    missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if
-                               f'article_id_{article_id}' not in df.columns}
-    df = df.assign(**missing_article_columns)
-    # Fill missing article columns with 0 (only article_id_* cols)
-    df[df.columns[df.columns.str.contains("article_id")]] = df[df.columns[df.columns.str.contains("article_id")]].fillna(0)
+    # article_id_dummies = df.groupby('web_order_id')['article_id'].apply(lambda x: pd.Series(
+    #     {f'article_id_{article_id}': 1 for article_id in article_ids_to_encode if article_id in x.values}))
+    # article_id_dummies = article_id_dummies.unstack().fillna(0).reset_index()
+    # df = pd.merge(df, article_id_dummies, on='web_order_id', how='left')
+    # missing_article_columns = {f'article_id_{article_id}': 0 for article_id in article_ids_to_encode if
+    #                            f'article_id_{article_id}' not in df.columns}
+    # df = df.assign(**missing_article_columns)
+    # # Fill missing article columns with 0 (only article_id_* cols)
+    # df[df.columns[df.columns.str.contains("article_id")]] = df[df.columns[df.columns.str.contains("article_id")]].fillna(0)
 
 def add_crate_counts(df,df_order_articles):
-    crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49,
-                              28, 30, 29, 27]
+    crate_counts_to_encode = [72, 62, 56, 58, 65, 67, 60, 45, 55, 42, 46, 43, 38, 44, 54, 53, 49, 47, 39, 52, 37, 48, 50, 41, 36, 63, 59, 35, 34, 64, 31, 32, 40, 28, 33, 29, 57, 27, 30, 25]
 
     # Merge box ids to orders
     df_crate_counts = pd.merge(df, df_order_articles[['web_order_id', 'box_id']], on='web_order_id', how='left', suffixes=('', '_y'))
@@ -91,15 +110,23 @@ def add_crate_counts(df,df_order_articles):
     # df_crate_counts = df_crate_counts[['web_order_id', 'crate_count']]
     # # Merge duplicates
     # df_crate_counts = df_crate_counts.drop_duplicates()
-
     df_tmp = df_crate_counts.copy()
     df_tmp['box_id'] = df_tmp['box_id'].fillna(0)
     nan_boxes_df = df_tmp[df_tmp['box_id'] == 0]
     drink_count = nan_boxes_df.groupby('web_order_id').count()
+
     df_tmp = df_crate_counts.dropna(axis=0, subset=['box_id'])
     drink_count['food_boxes'] = df_tmp.groupby('web_order_id')['box_id'].nunique()
+
     drink_count = drink_count.fillna(0)
-    df['crate_count'] = drink_count['food_boxes'] + drink_count['box_id']
+
+    drink_count['crate_count'] = drink_count['food_boxes'] + drink_count['box_id']
+    drink_count.drop(columns=['box_id', 'food_boxes'], inplace=True)
+    df = pd.merge(df, drink_count, on="web_order_id", how='left')
+
+    # One hot encode crate_count
+    for crate_count in crate_counts_to_encode:
+        df[f'crate_count_{crate_count}'] = (df['crate_count'] == crate_count).astype(int)
 
 
     # Count NaNs in 'box id' per 'order id' and store in 'crate count'
@@ -169,3 +196,4 @@ def subsample_for_plotting(df, n=100_000):
 if __name__ == '__main__':
     run_preprocessing()
     print("Preprocessing finished.")
+    

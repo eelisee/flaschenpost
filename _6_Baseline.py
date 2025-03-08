@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.model_selection import train_test_split
 from _1_Preprocessing import run_preprocessing
+from _12_evaluation import confidence_interval
 
 target = "service_time_in_minutes"
 #features = ["article_weight_in_g", "is_business", "is_pre_order", "has_elevator", "floor", "num_previous_orders_customer", "customer_speed", "service_time_start"]
@@ -27,10 +28,13 @@ def baseline_evaluation():
     mae_train = mean_absolute_error(train_df_unique[target], [average_service_time_train] * len(train_df_unique))
     mse_test = mean_squared_error(test_df_unique[target], [average_service_time_test] * len(test_df_unique))
     mae_test = mean_absolute_error(test_df_unique[target], [average_service_time_test] * len(test_df_unique))
+    confidence_interval= confidence_interval([average_service_time_test] * len(test_df_unique))
+
 
     print("Baseline Evaluation:")
     print(f"Train-Set: MSE = {mse_train}, MAE = {mae_train}")
     print(f"Test-Set: MSE = {mse_test}, MAE = {mae_test}")
+    print(f"Confidence Interval: {confidence_interval}")
 
 baseline_evaluation()
 print("-----------------------------------------------")

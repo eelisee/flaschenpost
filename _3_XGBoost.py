@@ -2,6 +2,7 @@ import numpy
 import numpy as np
 
 from _1_Preprocessing import run_preprocessing
+from _12_evaluation import confidence_interval
 import xgboost as xgb
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.model_selection import train_test_split
@@ -51,8 +52,9 @@ def xgboost(params):
     MSE_valid = mean_squared_error(y_valid, y_pred_valid)
     MAE_valid = mean_absolute_error(y_valid, y_pred_valid)
     R2_valid = model.score(X_valid, y_valid)
+    conf_int_valid = confidence_interval(y_pred_valid)
 
-    return MSE_train, MAE_train, R2_train, MSE_valid, MAE_valid, R2_valid, model
+    return MSE_train, MAE_train, R2_train, MSE_valid, MAE_valid, R2_valid, conf_int_valid, model
 
 params = {
     "n_estimators": [1000],
@@ -77,8 +79,8 @@ for n_estimators in params["n_estimators"]:
         for eta in params["eta"]:
             for subsample in params["subsample"]:
                 for colsample_bytree in params["colsample_bytree"]:
-                    MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test, model = xgboost({"n_estimators": n_estimators, "max_depth": max_depth, "eta": eta, "subsample": subsample, "colsample_bytree": colsample_bytree})
-                    print(f"n_estimators: {n_estimators}, max_depth: {max_depth}, eta: {eta}, subsample: {subsample}, colsample_bytree: {colsample_bytree}, MSE_train: {MSE_train}, MAE_train: {MAE_train}, R2_train: {R2_train}, MSE_test: {MSE_test}, MAE_test: {MAE_test}, R2_test: {R2_test}")
+                    MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test, conf_int_test, model = xgboost({"n_estimators": n_estimators, "max_depth": max_depth, "eta": eta, "subsample": subsample, "colsample_bytree": colsample_bytree})
+                    print(f"n_estimators: {n_estimators}, max_depth: {max_depth}, eta: {eta}, subsample: {subsample}, colsample_bytree: {colsample_bytree}, MSE_train: {MSE_train}, MAE_train: {MAE_train}, R2_train: {R2_train}, MSE_test: {MSE_test}, MAE_test: {MAE_test}, R2_test: {R2_test}, conf_int_valid: {conf_int_test}")
                     best_params = best_params if min_mae < MAE_test else {"n_estimators": n_estimators, "max_depth": max_depth, "eta": eta, "subsample": subsample, "colsample_bytree": colsample_bytree}
                     min_mae = min_mae if min_mae < MAE_test else MAE_test
                     model = model if min_mae < MAE_test else model
@@ -117,7 +119,8 @@ print("XGBoost fitted. Evaluation on test-set:")
 print(f"MSE = {mean_squared_error(y_test, y_pred)}")
 print(f"MAE = {mean_absolute_error(y_test, y_pred)}")
 print(f"R2 = {model.score(X_test, y_test)}")
-print(f"Train-Set-Evaluation: MSE = {mean_squared_error(y, model.predict(X))}, MAE = {mean_absolute_error(y_test, y_pred)}, R2 = {model.score(X, y)}")
+print(f"Confidence Interval: {confidence_interval(y_pred)}")
+print(f"Train-Set-Evaluation: MSE = {mean_squared_error(y, model.predict(X))}, MAE = {mean_absolute_error(y_test, y_pred)}, R2 = {model.score(X, y)}, Confidence Interval: {confidence_interval(y_pred)}")
 
 print("Dataset-size (train): ", len(df_train))
 print("Dataset-size (test): ", len(df_test))

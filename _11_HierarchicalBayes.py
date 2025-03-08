@@ -68,7 +68,7 @@ def hierarchical_regression():
         y_obs = pm.Normal("y_obs", mu=mu_val, sigma=sigma, observed=y_train)
         
         # Sampling aus dem Posterior
-        trace = pm.sample(10, tu0, target_accept=0.95, return_inferencedata=True, progressbar=True)
+        trace = pm.sample(10, tune=20, target_accept=0.95, return_inferencedata=True, progressbar=True)
     
     # Vorhersagen auf Testdaten
     with model:
@@ -83,11 +83,18 @@ def hierarchical_regression():
     mse = mean_squared_error(y_test, y_pred)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
+    confidence_interval = confidence_interval(y_pred)
     
     print("Hierarchisches Modell fitted. Evaluation on Test-Set:")
     print(f"MSE = {mse}")
     print(f"MAE = {mae}")
     print(f"R2  = {r2}")
+    print(f"Confidence Interval: {confidence_interval}")
+
+    # Save model to disk
+    import joblib
+    joblib.dump(model, './model/hierarchical_bayes.pkl')
+    print("Model saved to disk.")
     
     return model, trace, y_pred
 

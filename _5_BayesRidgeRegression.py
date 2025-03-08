@@ -5,6 +5,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from _1_Preprocessing import run_preprocessing
+from _12_evaluation import confidence_interval
 
 # Configure logging
 logging.basicConfig(filename='output.log', level=logging.INFO, format='%(message)s')
@@ -62,14 +63,21 @@ def bayesian_ridge_regression():
     logging.info(f"MSE = {mean_squared_error(y_test, y_pred)}")
     logging.info(f"MAE = {mean_absolute_error(y_test, y_pred)}")
     logging.info(f"R2 = {model.score(X_test_scaled, y_test)}")
-    logging.info(f"Train-Set-Evaluation: MSE = {mean_squared_error(y_train, model.predict(X_train_scaled))}, MAE = {mean_absolute_error(y_train, model.predict(X_train_scaled))}, R2 = {model.score(X_train_scaled, y_train)}")
+    logging.info(f"Confidence Interval: {confidence_interval(y_pred)}")
+    logging.info(f"Train-Set-Evaluation: MSE = {mean_squared_error(y_train, model.predict(X_train_scaled))}, MAE = {mean_absolute_error(y_train, model.predict(X_train_scaled))}, R2 = {model.score(X_train_scaled, y_train)}, Confidence Interval: {confidence_interval(y_pred)}")
 
     # Evaluation
     print("Bayesian Ridge Regression fitted. Evaluation on test-set:")
     print(f"MSE = {mean_squared_error(y_test, y_pred)}")
     print(f"MAE = {mean_absolute_error(y_test, y_pred)}")
     print(f"R2 = {model.score(X_test_scaled, y_test)}")
-    print(f"Train-Set-Evaluation: MSE = {mean_squared_error(y_train, model.predict(X_train_scaled))}, MAE = {mean_absolute_error(y_train, model.predict(X_train_scaled))}, R2 = {model.score(X_train_scaled, y_train)}")
+    print(f"Confidence Interval: {confidence_interval(y_pred)}")
+    print(f"Train-Set-Evaluation: MSE = {mean_squared_error(y_train, model.predict(X_train_scaled))}, MAE = {mean_absolute_error(y_train, model.predict(X_train_scaled))}, R2 = {model.score(X_train_scaled, y_train)}, Confidence Interval: {confidence_interval(y_pred)}")
+
+    # Save model to disk
+    import joblib
+    joblib.dump(model, './model/bayes_ridge_regression.pkl')
+    print("Model saved to disk.")
 
 bayesian_ridge_regression()
 print("-----------------------------------------------")
@@ -120,11 +128,13 @@ def bayesian_ridge_regression_with_grid_search():
         mae = mean_absolute_error(y_test, y_pred)
         print(f"Mean Absolute Error: {mae}")
         logging.info(f"Mean Absolute Error: {mae}")
+        conf_int = confidence_interval(y_pred)
+        print(f"Confidence Interval: {conf_int}")
+        logging.info(f"Confidence Interval: {conf_int}")
 
 bayesian_ridge_regression_with_grid_search()
 print("-----------------------------------------------")
 logging.info("-----------------------------------------------")
-
 
 # Bayesian Ridge Regression fitted. Evaluation on test-set:
 # MSE = 26.45291119761192
