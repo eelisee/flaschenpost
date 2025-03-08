@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # BITTE DEN PFAD ANPASSEN (z.B. /data/)
-root_path_data = 'data/'
+root_path_data = './'
 
 
 def run_preprocessing(save=False):
@@ -56,7 +56,7 @@ def merge_tables(df_orders, df_driver_order_mapping, df_service_times):
 
 
 def add_article_total_weight(df, df_order_articles):
-    article_total_weight = df_order_articles[["article_weight_in_g", "web_order_id", "box_id"]].groupby("web_order_id").sum()
+    article_total_weight = df_order_articles[["article_weight_in_g", "web_order_id"]].groupby("web_order_id").sum()
     df = pd.merge(df, article_total_weight, on="web_order_id", how='left')
     return df
 
@@ -91,15 +91,19 @@ def add_crate_counts(df,df_order_articles):
     # df_crate_counts = df_crate_counts[['web_order_id', 'crate_count']]
     # # Merge duplicates
     # df_crate_counts = df_crate_counts.drop_duplicates()
-
     df_tmp = df_crate_counts.copy()
     df_tmp['box_id'] = df_tmp['box_id'].fillna(0)
     nan_boxes_df = df_tmp[df_tmp['box_id'] == 0]
     drink_count = nan_boxes_df.groupby('web_order_id').count()
+
     df_tmp = df_crate_counts.dropna(axis=0, subset=['box_id'])
     drink_count['food_boxes'] = df_tmp.groupby('web_order_id')['box_id'].nunique()
+
     drink_count = drink_count.fillna(0)
-    df['crate_count'] = drink_count['food_boxes'] + drink_count['box_id']
+
+    drink_count['crate_count'] = drink_count['food_boxes'] + drink_count['box_id']
+    drink_count.drop(columns=['box_id', 'food_boxes'], inplace=True)
+    df = pd.merge(df, drink_count, on="web_order_id", how='left')
 
 
     # Count NaNs in 'box id' per 'order id' and store in 'crate count'
@@ -169,3 +173,4 @@ def subsample_for_plotting(df, n=100_000):
 if __name__ == '__main__':
     run_preprocessing()
     print("Preprocessing finished.")
+    
