@@ -33,6 +33,14 @@ def load_data():
     df_driver_order_mapping = pd.read_parquet(os.path.join(root_path_data, 'masked_driver_order_mapping.parquet'))
     df_service_times = pd.read_parquet(os.path.join(root_path_data, 'masked_service_times.parquet'))
     df_order_articles = pd.read_parquet(os.path.join(root_path_data, 'masked_order_articles.parquet'))
+
+    # print to check
+
+    print("df_orders columns:", df_orders.columns.tolist())
+    print("df_driver_order_mapping columns:", df_driver_order_mapping.columns.tolist())
+    print("df_service_times columns:", df_service_times.columns.tolist())
+    print("df_order_articles columns:", df_order_articles.columns.tolist())
+    
     return df_orders, df_driver_order_mapping, df_service_times, df_order_articles
 
 
@@ -44,7 +52,7 @@ def merge_tables(df_orders, df_driver_order_mapping, df_service_times):
 
 
 def add_article_total_weight(df, df_order_articles):
-    article_total_weight = df_order_articles[["article_weight_in_g", "web_order_id"]].groupby("web_order_id").sum()
+    article_total_weight = df_order_articles[["article_weight_in_g", "web_order_id", "box_id"]].groupby("web_order_id").sum()
     df = pd.merge(df, article_total_weight, on="web_order_id", how='left')
     return df
 
@@ -64,6 +72,7 @@ def one_hot_encoding(df):
     # Fill missing article columns with 0 (only article_id_* cols)
     df[df.columns[df.columns.str.contains("article_id")]] = df[df.columns[df.columns.str.contains("article_id")]].fillna(0)
 
+    print(df.columns)
 
     # Count NaNs in 'box id' per 'order id' and store in 'crate count'
     df['crate_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.isna().sum())
@@ -74,6 +83,9 @@ def one_hot_encoding(df):
     missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if
                              f'crate_count_{crate_count}' not in df.columns}
     df = df.assign(**missing_crate_columns)
+    # Fill missing article columns with 0 (only article_id_* cols)
+    df[df.columns[df.columns.str.contains("crate_count")]] = df[df.columns[df.columns.str.contains("crate_count")]].fillna(0)
+
 
     return df
 
