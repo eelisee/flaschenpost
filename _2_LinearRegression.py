@@ -5,6 +5,7 @@ from sklearn.linear_model import SGDRegressor
 from sklearn.preprocessing import StandardScaler
 from GRANDE import GRANDE
 from _1_Preprocessing import run_preprocessing
+from _12_evaluation import confidence_interval
 from sklearn.naive_bayes import GaussianNB
 
 target = "service_time_in_minutes"
@@ -39,6 +40,7 @@ def linear_regression():
     print(f"MSE = {mean_squared_error(y_test, y_pred)}")
     print(f"MAE = {mean_absolute_error(y_test, y_pred)}")
     print(f"R2 = {model.score(X_test, y_test)}")
+    print(f"Confidence Interval: {confidence_interval(y_pred)}")
     print(f"Train-Set-Evaluation: MSE = {mean_squared_error(y, model.predict(X))}, MAE = {mean_absolute_error(y_test, y_pred)}, R2 = {model.score(X, y)}")
 
 
@@ -73,8 +75,9 @@ def ridge_regression(params):
     MSE_test = mean_squared_error(y_test, y_pred)
     MAE_test = mean_absolute_error(y_test, y_pred)
     R2_test = model.score(X_test, y_test)
+    conf_int = confidence_interval(y_pred)
 
-    return MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test
+    return MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test, conf_int
 
 param_jobs = {"alpha": [0.01, 0.1, 0.5, 1.0, 1.5, 2, 10],
           "solver": ['auto'],
@@ -128,8 +131,9 @@ def lasso_regression(params):
     MSE_test = mean_squared_error(y_test, y_pred)
     MAE_test = mean_absolute_error(y_test, y_pred)
     R2_test = model.score(X_test, y_test)
+    conf_int = confidence_interval(y_pred)
 
-    return MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test
+    return MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test, conf_int
 
 param_jobs = {"alpha": [0.01, 0.1, 0.5, 1.0, 1.5, 2, 10],
               "solver": ['auto'],
@@ -143,9 +147,10 @@ for alpha in param_jobs["alpha"]:
     for tol in param_jobs["tol"]:
         params["alpha"] = alpha
         params["tol"] = tol
-        MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test = lasso_regression(params)
+        MSE_train, MAE_train, R2_train, MSE_test, MAE_test, R2_test, conf_int = lasso_regression(params)
+        
         print(
-            f"alpha={alpha}, solver={solver}, tol={tol}, MSE_train={MSE_train}, MAE_train={MAE_train}, R2_train={R2_train}, MSE_test={MSE_test}, MAE_test={MAE_test}, R2_test={R2_test}")
+            f"alpha={alpha}, solver={solver}, tol={tol}, MSE_train={MSE_train}, MAE_train={MAE_train}, R2_train={R2_train}, MSE_test={MSE_test}, MAE_test={MAE_test}, R2_test={R2_test}, Confidence Interval={conf_int}")
         min_mae = min_mae if min_mae < MAE_test else MAE_test
         min_mae_params = min_mae_params if min_mae < MAE_test else params.copy()
 
