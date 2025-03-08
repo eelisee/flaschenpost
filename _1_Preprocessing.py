@@ -33,14 +33,6 @@ def load_data():
     df_driver_order_mapping = pd.read_parquet(os.path.join(root_path_data, 'masked_driver_order_mapping.parquet'))
     df_service_times = pd.read_parquet(os.path.join(root_path_data, 'masked_service_times.parquet'))
     df_order_articles = pd.read_parquet(os.path.join(root_path_data, 'masked_order_articles.parquet'))
-
-    # print to check
-
-    print("df_orders columns:", df_orders.columns.tolist())
-    print("df_driver_order_mapping columns:", df_driver_order_mapping.columns.tolist())
-    print("df_service_times columns:", df_service_times.columns.tolist())
-    print("df_order_articles columns:", df_order_articles.columns.tolist())
-    
     return df_orders, df_driver_order_mapping, df_service_times, df_order_articles
 
 
