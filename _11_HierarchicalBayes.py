@@ -1,6 +1,7 @@
 import numpy as np
 import pymc as pm
 import arviz as az
+import joblib
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.preprocessing import StandardScaler
 from _1_Preprocessing import run_preprocessing
@@ -73,11 +74,12 @@ def hierarchical_regression():
     
     # Vorhersagen auf Testdaten
     with model:
-        # Hier können wir mittels Indexierung die gruppenspezifischen Effekte hinzufügen.
         mu_test = beta0 + pm.math.dot(X_test_scaled, beta) + customer_effect[customer_ids_test] + driver_effect[driver_ids_test]
+        y_obs_test = pm.Normal("y_obs_test", mu=mu_test, sigma=sigma, observed=y_test)
         # Da wir ein normales Likelihood-Modell verwenden, nutzen wir den Mittelwert als Vorhersage
-        # Wir ziehen Posterior Predictive Samples, um die Unsicherheit zu integrieren
+        y_pred = posterior_pred['y_obs_test'].mean(axis=0)
         posterior_pred = pm.sample_posterior_predictive(trace, var_names=["y_obs"], progressbar=True)
+    
     y_pred = posterior_pred[y_obs].mean(axis=0)
     
     # Evaluation
