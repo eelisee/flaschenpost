@@ -15,7 +15,7 @@ target = "service_time_in_minutes"
 df_train, df_test = run_preprocessing()
 
 # After train-test split:
-max_total_rows = 3000  # safe small size to begin
+max_total_rows = 1000  # safe small size to begin
 
 # Sample order_ids randomly until reaching the desired max_total_rows
 unique_order_ids = df_train['web_order_id'].unique()
