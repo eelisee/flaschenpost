@@ -68,17 +68,19 @@ def one_hot_encoding(df, df_order_articles):
     df_article_counts = pd.merge(df, df_order_articles[['web_order_id', 'article_id']], on='web_order_id', how='left', suffixes=('', '_y'))
     df_article_counts.drop(df.filter(regex='_y$').columns, axis=1, inplace=True)
 
-    df_tmp = df_article_counts.copy()
-    df_article_counts['article_id'] = df_tmp.groupby('web_order_id')['article_id'].nunique()
-    df_article_counts = df_article_counts.fillna(0)
+    df_article_counts = df_article_counts[['web_order_id', 'article_id']]
 
-    df = pd.merge(df, df_article_counts, on="web_order_id", how='left')
+    # df_tmp = df_article_counts.copy()
+    article_counts = df_article_counts.groupby('web_order_id').agg({'article_id': 'nunique'})
+    article_counts = article_counts.fillna(0)
+
+
+    df = pd.merge(df, article_counts, on="web_order_id", how='left')
 
     # One hot encode crate_count
     for article_id in article_ids_to_encode:
         df[f'article_id_{article_id}'] = (df['article_id'] == article_id).astype(int)
     
-    print(df.head())
     return df
 
 
