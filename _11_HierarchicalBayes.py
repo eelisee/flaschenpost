@@ -68,7 +68,7 @@ def hierarchical_regression():
         y_obs = pm.Normal("y_obs", mu=mu_val, sigma=sigma, observed=y_train)
         
         # Sampling aus dem Posterior
-        trace = pm.sample(1000, tune=1000, target_accept=0.95, return_inferencedata=True, progressbar=True)
+        trace = pm.sample(10, tune=100, target_accept=0.95, return_inferencedata=True, progressbar=True)
     
     # Vorhersagen auf Testdaten
     with model:
