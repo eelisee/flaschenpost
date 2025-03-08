@@ -87,6 +87,11 @@ print("MAE:", mean_absolute_error(y_test, y_pred_final))
 print("R²:", r2_score(y_test, y_pred_final))
 print("Confidence Interval:", confidence_interval(y_pred_final))
 
+# Save model to disk
+import joblib
+joblib.dump(final_model, './model/light_gbm.pkl')
+print("Model saved to disk.")
+
 
 # LightGBM Linex Regression fitted. Evaluation on test-set:
 # Final model results:

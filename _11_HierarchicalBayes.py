@@ -90,6 +90,11 @@ def hierarchical_regression():
     print(f"MAE = {mae}")
     print(f"R2  = {r2}")
     print(f"Confidence Interval: {confidence_interval}")
+
+    # Save model to disk
+    import joblib
+    joblib.dump(model, './model/hierarchical_bayes.pkl')
+    print("Model saved to disk.")
     
     return model, trace, y_pred
 

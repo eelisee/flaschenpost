@@ -160,6 +160,11 @@ def deep_gp_regression():
 
     print("Deep GP Regression Test Results:")
     print(f"MSE: {mse}, MAE: {mae}, R2: {r2}, Confidence Interval: {confidence_interval}")
+    
+    # Save model to disk
+    import joblib
+    joblib.dump(model, './model/deep_gaussian_process.pkl')
+    print("Model saved to disk.")
 
 ################################################################################
 # Main-Block

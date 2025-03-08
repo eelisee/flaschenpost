@@ -120,3 +120,8 @@ print("Dataset-size (train): ", len(df_train))
 print("Dataset-size (test): ", len(df_test))
 print("Number of features: ", len(features))
 print("Feature-selection: ", features)
+
+# Save model to disk
+import joblib
+joblib.dump(model, './model/linex_regression.pkl')
+print("Model saved to disk.")

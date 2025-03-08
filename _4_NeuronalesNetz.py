@@ -37,3 +37,8 @@ print(f"MAE = {mean_absolute_error(y_test, y_pred)}")
 print(f"R2  = {1 - mean_squared_error(y_test, y_pred) / np.var(y_test)}")
 print(f"Confidence Interval: {confidence_interval(y_pred)}")
 
+# Save model to disk
+import joblib
+joblib.dump(model, './model/neuralnetwork.pkl')
+print("Model saved to disk.")
+

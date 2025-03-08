@@ -73,6 +73,11 @@ def bart_regression():
           f"Confidence Interval: {confidence_interval(y_train_pred)}")
     print("-----------------------------------------------")
 
+    # Save model to disk
+    import joblib
+    joblib.dump(model, './model/bart.pkl')
+    print("Model saved to disk.")
+
 def fine_tune_bart(X, y, param_grid, test_size=0.2):
     ########################################################################################################################
     # Fine-Tuning des BART-Modells via manueller Grid Search (Hold-out-Validierung)
