@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 import pymc as pm
 import arviz as az
 from _1_Preprocessing import run_preprocessing
+from _12_evaluation import confidence_interval
 
 target = "service_time_in_minutes"
 features_to_keep = [
@@ -58,6 +59,7 @@ def bart_regression():
     print(f"MSE = {mean_squared_error(y_test, y_pred)}")
     print(f"MAE = {mean_absolute_error(y_test, y_pred)}")
     print(f"R2  = {r2_score(y_test, y_pred)}")
+    print(f"Confidence Interval: {confidence_interval(y_pred)}")
     
     # Train-Set Evaluation (optional)
     with model:
@@ -67,7 +69,9 @@ def bart_regression():
     print("Train-Set Evaluation:")
     print(f"MSE = {mean_squared_error(y_train, y_train_pred)}, " +
           f"MAE = {mean_absolute_error(y_train, y_train_pred)}, " +
-          f"R2 = {r2_score(y_train, y_train_pred)}")
+          f"R2 = {r2_score(y_train, y_train_pred)}, " +
+          f"Confidence Interval: {confidence_interval(y_train_pred)}")
+    print("-----------------------------------------------")
 
 def fine_tune_bart(X, y, param_grid, test_size=0.2):
     ########################################################################################################################
@@ -94,13 +98,16 @@ def fine_tune_bart(X, y, param_grid, test_size=0.2):
                     pp_val = pm.sample_posterior_predictive(trace, var_names=["y_obs"], progressbar=False)
                 y_val_pred = pp_val["y_obs"].mean(axis=0)
                 mse_val = mean_squared_error(y_val, y_val_pred)
-                print(f"m = {m}, n_iter = {n_iter}, n_tune = {n_tune}: Validation MSE = {mse_val}")
+                conf_int = confidence_interval(y_val_pred)
+                print(f"m = {m}, n_iter = {n_iter}, n_tune = {n_tune}: Validation MSE = {mse_val}, Confidence Interval = {conf_int}")
                 if mse_val < best_score:
                     best_score = mse_val
                     best_params = {"m": m, "n_iter": n_iter, "n_tune": n_tune}
+                    best_conf_int = conf_int
     
     print("Best Hyperparameters:", best_params)
     print("Best (Validation) MSE:", best_score)
+    print("Best Confidence Interval:", best_conf_int)
     return best_params, best_score
 
 # Example parameter grid for fine-tuning
@@ -132,6 +139,7 @@ print("Final Model Evaluation on Test-Set:")
 print(f"MSE = {mean_squared_error(y_test, y_final_pred)}")
 print(f"MAE = {mean_absolute_error(y_test, y_final_pred)}")
 print(f"R2  = {r2_score(y_test, y_final_pred)}")
+print(f"Confidence Interval: {confidence_interval(y_final_pred)}")
 print("-----------------------------------------------")
 
 # Zum Abschluss die Standard-BART-Regression ausführen

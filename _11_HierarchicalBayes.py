@@ -83,11 +83,13 @@ def hierarchical_regression():
     mse = mean_squared_error(y_test, y_pred)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
+    confidence_interval = confidence_interval(y_pred)
     
     print("Hierarchisches Modell fitted. Evaluation on Test-Set:")
     print(f"MSE = {mse}")
     print(f"MAE = {mae}")
     print(f"R2  = {r2}")
+    print(f"Confidence Interval: {confidence_interval}")
     
     return model, trace, y_pred
 

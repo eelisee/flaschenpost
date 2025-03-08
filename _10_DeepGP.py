@@ -6,6 +6,7 @@ from gpytorch.models.deep_gps import DeepGP, AbstractDeepGPLayer
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.preprocessing import StandardScaler
 from _1_Preprocessing import run_preprocessing
+from _12_evaluation import confidence_interval
 
 # Zielvariable und Features definieren
 target = "service_time_in_minutes"
@@ -155,9 +156,10 @@ def deep_gp_regression():
     mse = mean_squared_error(y_test, y_pred)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
+    confidence_interval = confidence_interval(y_pred)
 
     print("Deep GP Regression Test Results:")
-    print(f"MSE: {mse}, MAE: {mae}, R2: {r2}")
+    print(f"MSE: {mse}, MAE: {mae}, R2: {r2}, Confidence Interval: {confidence_interval}")
 
 ################################################################################
 # Main-Block

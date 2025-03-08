@@ -1,9 +1,11 @@
 # Tensorflow keras neural network
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+
 import numpy as np
 
 from _1_Preprocessing import run_preprocessing
+from _12_evaluation import confidence_interval
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
@@ -32,4 +34,6 @@ y_pred = model.predict(X_test)
 print("Neural Network fitted. Evaluation on test-set:")
 print(f"MSE = {mean_squared_error(y_test, y_pred)}")
 print(f"MAE = {mean_absolute_error(y_test, y_pred)}")
+print(f"R2  = {1 - mean_squared_error(y_test, y_pred) / np.var(y_test)}")
+print(f"Confidence Interval: {confidence_interval(y_pred)}")
 
