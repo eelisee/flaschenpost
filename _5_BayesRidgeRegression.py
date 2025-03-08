@@ -78,7 +78,8 @@ def bayesian_ridge_regression_with_grid_search():
         estimator=model,
         param_grid=param_grid,
         scoring='neg_mean_squared_error',
-        cv=5
+        cv=5,
+        n_jobs=-1 
     )
 
     grid_search.fit(X_train_scaled, y_train)

@@ -64,8 +64,6 @@ def one_hot_encoding(df):
     # Fill missing article columns with 0 (only article_id_* cols)
     df[df.columns[df.columns.str.contains("article_id")]] = df[df.columns[df.columns.str.contains("article_id")]].fillna(0)
 
-    print(df.columns)
-
     # Count NaNs in 'box id' per 'order id' and store in 'crate count'
     df['crate_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.isna().sum())
 
