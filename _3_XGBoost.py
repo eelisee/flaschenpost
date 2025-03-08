@@ -37,8 +37,7 @@ def xgboost(params):
                              eta=params["eta"],
                              subsample=params["subsample"],
                              colsample_bytree=params["colsample_bytree"],
-                             seed=42,
-                             n_threads=8)
+                             seed=42)
 
     # Train the model
     model.fit(X, y)
@@ -127,3 +126,8 @@ print("Dataset-size (train): ", len(df_train))
 print("Dataset-size (test): ", len(df_test))
 print("Number of features: ", len(features))
 print("Feature-selection: ", features)
+
+# Save model to disk
+import joblib
+joblib.dump(model, './model/xgboost.pkl')
+print("Model saved to disk.")
