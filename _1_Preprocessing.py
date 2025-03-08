@@ -65,7 +65,8 @@ def one_hot_encoding(df):
     df[df.columns[df.columns.str.contains("article_id")]] = df[df.columns[df.columns.str.contains("article_id")]].fillna(0)
 
     # Count NaNs in 'box id' per 'order id' and store in 'crate count'
-    df['crate_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.isna().sum())
+    df['box_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.isna().sum())
+    df['crate_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.nunique()) + df['box_count']
 
     # One hot encode crate_count
     df['crate_count'] = df['crate_count'].astype(str)
@@ -73,10 +74,6 @@ def one_hot_encoding(df):
     missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if
                              f'crate_count_{crate_count}' not in df.columns}
     df = df.assign(**missing_crate_columns)
-    # Fill missing article columns with 0 (only article_id_* cols)
-    df[df.columns[df.columns.str.contains("crate_count")]] = df[df.columns[df.columns.str.contains("crate_count")]].fillna(0)
-
-
     return df
 
 

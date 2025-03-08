@@ -1,9 +1,13 @@
 import pandas as pd
+import logging
 from sklearn.linear_model import BayesianRidge
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from _1_Preprocessing import run_preprocessing
+
+# Configure logging
+logging.basicConfig(filename='output.log', level=logging.INFO, format='%(message)s')
 
 # Get Data
 df_train, df_test = run_preprocessing()
@@ -46,11 +50,19 @@ def bayesian_ridge_regression():
     ########################################################################################################################
     # Bayesian Ridge Regression
     print("Fitting Bayesian Ridge Regression...")
+    logging.info("Fitting Bayesian Ridge Regression...")
     model = BayesianRidge()
     model.fit(X_train_scaled, y_train)
 
     # Predict the values for the test set
     y_pred = model.predict(X_test_scaled)
+
+    # Evaluation
+    logging.info("Bayesian Ridge Regression fitted. Evaluation on test-set:")
+    logging.info(f"MSE = {mean_squared_error(y_test, y_pred)}")
+    logging.info(f"MAE = {mean_absolute_error(y_test, y_pred)}")
+    logging.info(f"R2 = {model.score(X_test_scaled, y_test)}")
+    logging.info(f"Train-Set-Evaluation: MSE = {mean_squared_error(y_train, model.predict(X_train_scaled))}, MAE = {mean_absolute_error(y_train, model.predict(X_train_scaled))}, R2 = {model.score(X_train_scaled, y_train)}")
 
     # Evaluation
     print("Bayesian Ridge Regression fitted. Evaluation on test-set:")
@@ -79,7 +91,7 @@ def bayesian_ridge_regression_with_grid_search():
         param_grid=param_grid,
         scoring='neg_mean_squared_error',
         cv=5,
-        n_jobs=-1 
+        n_jobs=4,
     )
 
     grid_search.fit(X_train_scaled, y_train)
@@ -88,17 +100,33 @@ def bayesian_ridge_regression_with_grid_search():
     print("Best Hyperparameters:", grid_search.best_params_)
     print("Best CV MSE:", -grid_search.best_score_)
 
+
+    # Output the best hyperparameters and the corresponding score
+    logging.info("Best Hyperparameters: %s", grid_search.best_params_)
+    logging.info("Best CV MSE: %f", -grid_search.best_score_)
+
+
     # Iterate over the results and print the MSE and MAE for each configuration
     for i, params in enumerate(grid_search.cv_results_['params']):
         print(f"Configuration {i+1}: {params}")
+        logging.info(f"Configuration {i+1}: {params}")
         mse = -grid_search.cv_results_['mean_test_score'][i]
         print(f"Mean Squared Error: {mse}")
+        logging.info(f"Mean Squared Error: {mse}")
         # Fit the model with the current parameters
         model.set_params(**params)
         model.fit(X_train_scaled, y_train)
         y_pred = model.predict(X_test_scaled)
         mae = mean_absolute_error(y_test, y_pred)
         print(f"Mean Absolute Error: {mae}")
+        logging.info(f"Mean Absolute Error: {mae}")
 
 bayesian_ridge_regression_with_grid_search()
 print("-----------------------------------------------")
+logging.info("-----------------------------------------------")
+
+
+# Bayesian Ridge Regression fitted. Evaluation on test-set:
+# MSE = 26.45291119761192
+# MAE = 3.5073328893023636
+# R2 = 0.45927469153105627
