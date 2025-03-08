@@ -4,6 +4,7 @@ import arviz as az
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.preprocessing import StandardScaler
 from _1_Preprocessing import run_preprocessing
+from _12_evaluation import confidence_interval
 
 # Zielvariable und Featureliste
 target = "service_time_in_minutes"
@@ -77,19 +78,19 @@ def hierarchical_regression():
         # Da wir ein normales Likelihood-Modell verwenden, nutzen wir den Mittelwert als Vorhersage
         # Wir ziehen Posterior Predictive Samples, um die Unsicherheit zu integrieren
         posterior_pred = pm.sample_posterior_predictive(trace, var_names=["y_obs"], progressbar=True)
-    y_pred = posterior_pred["y_obs"].mean(axis=0)
+    y_pred = posterior_pred[y_obs].mean(axis=0)
     
     # Evaluation
     mse = mean_squared_error(y_test, y_pred)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-    confidence_interval = confidence_interval(y_pred)
+    conf_int = confidence_interval(y_pred)
     
     print("Hierarchisches Modell fitted. Evaluation on Test-Set:")
     print(f"MSE = {mse}")
     print(f"MAE = {mae}")
     print(f"R2  = {r2}")
-    print(f"Confidence Interval: {confidence_interval}")
+    print(f"Confidence Interval: {conf_int}")
 
     # Save model to disk
     import joblib

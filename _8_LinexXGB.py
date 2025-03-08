@@ -29,7 +29,7 @@ driver_id_cols = df_train.columns[df_train.columns.str.contains("driver_id")]
 # Define the custom Linex loss function for XGBoost
 def linex_obj(y_pred, dtrain):
     a = 1.0  # Adjust this parameter based on your preference
-    y_true = dtrain.get_label()
+    y_true = dtrain.get_label().astype(float)
     error = y_pred - y_true
     grad = a * (1 - np.exp(-a * error))
     hess = (a**2) * np.exp(-a * error)

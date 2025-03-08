@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import pymc as pm
 import arviz as az
+import pymc_bart as pmb
 from _1_Preprocessing import run_preprocessing
 from _12_evaluation import confidence_interval
 
@@ -94,7 +95,7 @@ def fine_tune_bart(X, y, param_grid, test_size=0.2):
                 print(f"Evaluating BART with m = {m}, n_iter = {n_iter}, n_tune = {n_tune}...")
                 with pm.Model() as model:
                     X_shared = pm.Data("X", X_train_sub)
-                    mu = pm.BART("mu", X_shared, y_train_sub, m=m)
+                    mu = pmb.BART("mu", X_shared, y_train_sub, m=m)
                     sigma = pm.HalfNormal("sigma", sigma=1)
                     y_obs = pm.Normal("y_obs", mu=mu, sigma=sigma, observed=y_train_sub)
                     trace = pm.sample(n_iter, tune=n_tune, target_accept=0.95, return_inferencedata=True, progressbar=False)
