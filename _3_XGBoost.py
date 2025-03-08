@@ -36,7 +36,8 @@ def xgboost(params):
                              eta=params["eta"],
                              subsample=params["subsample"],
                              colsample_bytree=params["colsample_bytree"],
-                             seed=42)
+                             seed=42,
+                             n_threads=8)
 
     # Train the model
     model.fit(X, y)
@@ -54,20 +55,20 @@ def xgboost(params):
 
     return MSE_train, MAE_train, R2_train, MSE_valid, MAE_valid, R2_valid, model
 
-# params = {
-#     "n_estimators": [1000],
-#     "max_depth": [10, 20],
-#     "eta": [0.01, 0.1, 0.3],
-#     "subsample": [0.5, 0.75, 1],
-#     "colsample_bytree": [0.5, 0.75, 1]
-# }
 params = {
     "n_estimators": [1000],
-    "max_depth": [7, 10, 15],
-    "eta": [0.3, 0.2, 0.4],
+    "max_depth": [10],
+    "eta": [0.3],
     "subsample": [0.75],
     "colsample_bytree": [0.5]
 }
+# params = {
+#     "n_estimators": [1000],
+#     "max_depth": [7, 10, 15],
+#     "eta": [0.3, 0.2, 0.4],
+#     "subsample": [0.75],
+#     "colsample_bytree": [0.5]
+# }
 
 min_mae = np.inf
 best_params = {}
