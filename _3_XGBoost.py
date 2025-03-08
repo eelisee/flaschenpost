@@ -54,20 +54,20 @@ def xgboost(params):
 
     return MSE_train, MAE_train, R2_train, MSE_valid, MAE_valid, R2_valid, model
 
-# params = {
-#     "n_estimators": [1000],
-#     "max_depth": [10, 20],
-#     "eta": [0.01, 0.1, 0.3],
-#     "subsample": [0.5, 0.75, 1],
-#     "colsample_bytree": [0.5, 0.75, 1]
-# }
 params = {
     "n_estimators": [1000],
-    "max_depth": [7, 10, 15],
-    "eta": [0.3, 0.2, 0.4],
+    "max_depth": [10],
+    "eta": [0.3],
     "subsample": [0.75],
     "colsample_bytree": [0.5]
 }
+# params = {
+#     "n_estimators": [1000],
+#     "max_depth": [7, 10, 15],
+#     "eta": [0.3, 0.2, 0.4],
+#     "subsample": [0.75],
+#     "colsample_bytree": [0.5]
+# }
 
 min_mae = np.inf
 best_params = {}
@@ -123,3 +123,8 @@ print("Dataset-size (train): ", len(df_train))
 print("Dataset-size (test): ", len(df_test))
 print("Number of features: ", len(features))
 print("Feature-selection: ", features)
+
+# Save model to disk
+import joblib
+joblib.dump(model, './model/xgboost.pkl')
+print("Model saved to disk.")

@@ -5,17 +5,18 @@ import os
 root_path_data = 'data/'
 
 
-def run_preprocessing():
+def run_preprocessing(save=False):
     df_orders, df_driver_order_mapping, df_service_times, df_order_articles = load_data()
     df = merge_tables(df_orders, df_driver_order_mapping, df_service_times)
-    df = pd.merge(df, df_order_articles[['web_order_id', 'article_id']], on='web_order_id', how='left')
+    # df = pd.merge(df, df_order_articles[['web_order_id', 'article_id']], on='web_order_id', how='left')
     print("size before remove outliers: ", df.shape)
     df = remove_outliers(df)
     print("size after remove outliers: ", df.shape)
     df = add_article_total_weight(df, df_order_articles)
     print("size after add article total weight: ", df.shape)
-    df = one_hot_encoding(df)
-    print("size after one hot encoding: ", df.shape)
+    # df = one_hot_encoding(df)
+    df = add_crate_counts(df, df_order_articles)
+    print("size after add crate count: ", df.shape)
     # df = one_hot_encoding(df, ["warehouse_id", "driver_id"])
     df = handle_missing_values(df)
     print("size after handle missing values: ", df.shape)
@@ -25,6 +26,17 @@ def run_preprocessing():
     print("size after train test split: ", df_train.shape, df_test.shape)
     df_train, df_test = add_num_previous_orders__per_customer(df_train, df_test)
     df_train, df_test = add_customer_speed_ordinal(df_train, df_test)
+    if save:
+        save_data_to_parquet(df_train, df_test)
+    return df_train, df_test
+
+def save_data_to_parquet(df_train, df_test):
+    df_train.to_parquet(os.path.join(root_path_data, "df_train.parquet"), engine='fastparquet')
+    df_test.to_parquet(os.path.join(root_path_data, "df_test.parquet"), engine='fastparquet')
+
+def load_data_from_parquet():
+    df_train = pd.read_parquet(os.path.join(root_path_data, "df_train.parquet"), engine='fastparquet')
+    df_test = pd.read_parquet(os.path.join(root_path_data, "df_test.parquet"), engine='fastparquet')
     return df_train, df_test
 
 
@@ -51,8 +63,7 @@ def add_article_total_weight(df, df_order_articles):
 
 def one_hot_encoding(df):
     article_ids_to_encode = [15043, 20619, 18544, 21243]
-    crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49,
-                              28, 30, 29, 27]
+
     # One hot encode article_id
     article_id_dummies = df.groupby('web_order_id')['article_id'].apply(lambda x: pd.Series(
         {f'article_id_{article_id}': 1 for article_id in article_ids_to_encode if article_id in x.values}))
@@ -64,16 +75,45 @@ def one_hot_encoding(df):
     # Fill missing article columns with 0 (only article_id_* cols)
     df[df.columns[df.columns.str.contains("article_id")]] = df[df.columns[df.columns.str.contains("article_id")]].fillna(0)
 
+def add_crate_counts(df,df_order_articles):
+    crate_counts_to_encode = [60, 45, 42, 41, 43, 44, 46, 47, 39, 37, 35, 38, 40, 50, 48, 36, 33, 34, 31, 52, 32, 49,
+                              28, 30, 29, 27]
+
+    # Merge box ids to orders
+    df_crate_counts = pd.merge(df, df_order_articles[['web_order_id', 'box_id']], on='web_order_id', how='left', suffixes=('', '_y'))
+    df_crate_counts.drop(df.filter(regex='_y$').columns, axis=1, inplace=True)
+    df_crate_counts = df_crate_counts[['web_order_id', 'box_id']]
+
+    # Group by web_order_id
+    # group = df_crate_counts.groupby('web_order_id')
+    # df_crate_counts["crate_count"] = group.agg({'box_id': 'nunique'}).reset_index()['box_id']
+    # df_crate_counts["crate_count"] += group["box_id"].transform(lambda x: x.isnull().sum())
+    # df_crate_counts = df_crate_counts[['web_order_id', 'crate_count']]
+    # # Merge duplicates
+    # df_crate_counts = df_crate_counts.drop_duplicates()
+
+    df_tmp = df_crate_counts.copy()
+    df_tmp['box_id'] = df_tmp['box_id'].fillna(0)
+    nan_boxes_df = df_tmp[df_tmp['box_id'] == 0]
+    drink_count = nan_boxes_df.groupby('web_order_id').count()
+    df_tmp = df_crate_counts.dropna(axis=0, subset=['box_id'])
+    drink_count['food_boxes'] = df_tmp.groupby('web_order_id')['box_id'].nunique()
+    drink_count = drink_count.fillna(0)
+    df['crate_count'] = drink_count['food_boxes'] + drink_count['box_id']
+
+
     # Count NaNs in 'box id' per 'order id' and store in 'crate count'
-    df['box_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.isna().sum())
-    df['crate_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.nunique()) + df['box_count']
+    # df['box_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.isna().sum())
+    # df['crate_count'] = df.groupby('web_order_id')['box_id'].transform(lambda x: x.nunique()) + df['box_count']
 
     # One hot encode crate_count
-    df['crate_count'] = df['crate_count'].astype(str)
-    df = pd.get_dummies(df, columns=['crate_count'], prefix='crate_count', prefix_sep='_')
-    missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if
-                             f'crate_count_{crate_count}' not in df.columns}
-    df = df.assign(**missing_crate_columns)
+    # df['crate_count'] = df['crate_count'].astype(str)
+    # df = pd.get_dummies(df, columns=['crate_count'], prefix='crate_count', prefix_sep='_')
+    # # missing_crate_columns = {f'crate_count_{crate_count}': 0 for crate_count in crate_counts_to_encode if
+    # #                          f'crate_count_{crate_count}' not in df.columns}
+    # df = df.assign(**missing_crate_columns)
+    # merge back to df
+    # df = pd.merge(df, drink_count[['web_order_id', 'crate_count']], on='web_order_id', how='left')
     return df
 
 
@@ -121,3 +161,11 @@ def remove_outliers(df):
     df = df[df["service_time_in_minutes"] < 60]
     df = df[df["floor"] < 50]
     return df
+
+def subsample_for_plotting(df, n=100_000):
+    return df.sample(n, random_state=0)
+
+
+if __name__ == '__main__':
+    run_preprocessing()
+    print("Preprocessing finished.")
