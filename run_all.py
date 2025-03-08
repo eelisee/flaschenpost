@@ -13,7 +13,9 @@ scripts = [
     "_8_LinexXGB.py",
     "_9_LightGBM.py",
     "_7_BART.py",
-    "_5_BayesRidgeRegression.py"
+    "_5_BayesRidgeRegression.py",
+    "_10_DeepGP.py",
+    "_11_HierarchicalBayes.py"
 ]
 
 for script in scripts:
