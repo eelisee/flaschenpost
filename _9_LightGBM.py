@@ -6,6 +6,17 @@ from sklearn.model_selection import GridSearchCV
 import lightgbm as lgb
 from _1_Preprocessing import run_preprocessing
 from _12_evaluation import confidence_interval
+from scipy import stats
+
+def confidence_interval(y_true, y_pred, confidence=0.95):
+    residuals = y_true - y_pred
+    n = len(residuals)
+    mean_error = np.mean(residuals)
+    se = stats.sem(residuals)
+    h = se * stats.t.ppf((1 + confidence) / 2., n - 1)
+    lower_bound = mean_error - h
+    upper_bound = mean_error + h
+    return lower_bound, upper_bound
 
 
 target = "service_time_in_minutes"
@@ -53,6 +64,7 @@ def linex_lgb_regression():
     print("MSE:", mean_squared_error(y_test, y_pred))
     print("MAE:", mean_absolute_error(y_test, y_pred))
     print("R²:", r2_score(y_test, y_pred))
+    print("Confidence Interval:", confidence_interval(y_test, y_pred))
 
     return model
 
@@ -85,7 +97,7 @@ print("Final model results:")
 print("MSE:", mean_squared_error(y_test, y_pred_final))
 print("MAE:", mean_absolute_error(y_test, y_pred_final))
 print("R²:", r2_score(y_test, y_pred_final))
-print("Confidence Interval:", confidence_interval(y_pred_final))
+print("Confidence Interval:", confidence_interval(y_test, y_pred_final))
 
 # Save model to disk
 import joblib
