@@ -5,7 +5,7 @@ import os
 root_path_data = 'data/'
 
 
-def run_preprocessing():
+def run_preprocessing(save=False):
     df_orders, df_driver_order_mapping, df_service_times, df_order_articles = load_data()
     df = merge_tables(df_orders, df_driver_order_mapping, df_service_times)
     # df = pd.merge(df, df_order_articles[['web_order_id', 'article_id']], on='web_order_id', how='left')
@@ -26,7 +26,8 @@ def run_preprocessing():
     print("size after train test split: ", df_train.shape, df_test.shape)
     df_train, df_test = add_num_previous_orders__per_customer(df_train, df_test)
     df_train, df_test = add_customer_speed_ordinal(df_train, df_test)
-    save_data_to_parquet(df_train, df_test)
+    if save:
+        save_data_to_parquet(df_train, df_test)
     return df_train, df_test
 
 def save_data_to_parquet(df_train, df_test):
