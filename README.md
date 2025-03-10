@@ -31,13 +31,15 @@ We significantly improved the prediction accuracy by reducing the Mean Absolute 
 Our final presentation, summarizing our results and findings, is available in the `pitch_summary` directory. With this pitch, we secured second place in the challenge.
 
 ## Repository Structure
+- `_0_...`: Exploratory Data Analysis
 - `_1_Preprocessing`: Data preprocessing scripts and notebooks.
 - `_2_` to `_11_`: Implementation of various prediction models.
+- `_12_evaluation`: Definition of confidence interval calculation.
 - `_99_dash`: Dashboard for model evaluation.
 - `pitch_summary`: Final presentation of our results.
 
 ## Team Members
-Paul König (@p-koenig)
-Emil Schallwig (@limescha22)
-Simon Schumacher (@SparklingCraft)
-Elise Wolf (@eelisee)
+- [Paul König](https://github.com/p-koenig)
+- [Emil Schallwig](https://github.com/limescha22)
+- [Simon Schumacher](https://github.com/SparklingCraft)
+- [Elise Wolf](https://github.com/eelisee)
