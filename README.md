@@ -37,7 +37,7 @@ Our final presentation, summarizing our results and findings, is available in th
 - `pitch_summary`: Final presentation of our results.
 
 ## Team Members
-Paul König (@p-koenig)
-Emil Schallwig (@limescha22)
-Simon Schumacher (@SparklingCraft)
-Elise Wolf (@eelisee)
+- [Paul König](https://github.com/p-koenig)
+- [Emil Schallwig](https://github.com/limescha22)
+- [Simon Schumacher](https://github.com/SparklingCraft)
+- [Elise Wolf](https://github.com/eelisee)
