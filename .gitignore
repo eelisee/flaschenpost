@@ -1,7 +1,7 @@
 Flaschenpost_Datathon_2025_Dataset 1/
 .venv/
 .DS_Store
-
+*data/
 /.idea/
 /022025_Unternehmensvorstellung Datathon.pptx
 flaschenpost/
